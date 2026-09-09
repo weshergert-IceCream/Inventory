@@ -19,6 +19,7 @@ async function main() {
   await db.location.deleteMany();
   await db.productCategory.deleteMany();
   await db.unit.deleteMany();
+  await db.session.deleteMany();
   await db.user.deleteMany();
   await db.setting.deleteMany();
 

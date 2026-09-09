@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getLocationBalances } from "@/lib/inventory";
+import { requireUser } from "@/lib/auth";
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -14,6 +15,7 @@ function num(formData: FormData, key: string, fallback = 0) {
 }
 
 export async function createManufacturer(formData: FormData) {
+  await requireUser();
   const name = text(formData, "name");
   if (!name) return;
   await db.manufacturer.create({ data: { name } });
@@ -21,6 +23,7 @@ export async function createManufacturer(formData: FormData) {
 }
 
 export async function createSupplier(formData: FormData) {
+  await requireUser();
   const name = text(formData, "name");
   if (!name) return;
   await db.supplier.create({
@@ -37,6 +40,7 @@ export async function createSupplier(formData: FormData) {
 }
 
 export async function createProduct(formData: FormData) {
+  await requireUser();
   const name = text(formData, "name");
   if (!name) return;
   await db.product.create({
@@ -58,6 +62,7 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function createManualAdjustment(formData: FormData) {
+  await requireUser();
   const productId = text(formData, "productId");
   const locationId = text(formData, "locationId");
   const quantity = num(formData, "quantity");
@@ -79,6 +84,7 @@ export async function createManualAdjustment(formData: FormData) {
 }
 
 export async function completeStockCount(formData: FormData) {
+  await requireUser();
   const locationId = text(formData, "locationId");
   if (!locationId) return;
   const location = await db.location.findUnique({ where: { id: locationId } });
@@ -134,6 +140,7 @@ export async function completeStockCount(formData: FormData) {
 }
 
 export async function createPurchaseOrder(formData: FormData) {
+  await requireUser();
   const supplierId = text(formData, "supplierId");
   if (!supplierId) return;
   const supplierProducts = await db.supplierProduct.findMany({
@@ -179,6 +186,7 @@ export async function createPurchaseOrder(formData: FormData) {
 }
 
 export async function receivePurchaseOrder(formData: FormData) {
+  await requireUser();
   const purchaseOrderId = text(formData, "purchaseOrderId");
   const locationId = text(formData, "locationId");
   if (!purchaseOrderId || !locationId) return;
@@ -261,6 +269,7 @@ export async function receivePurchaseOrder(formData: FormData) {
 }
 
 export async function createCategory(formData: FormData) {
+  await requireUser();
   const name = text(formData, "name");
   if (!name) return;
   await db.productCategory.create({ data: { name, sortOrder: num(formData, "sortOrder", 0) } });
@@ -268,6 +277,7 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function createUnit(formData: FormData) {
+  await requireUser();
   const name = text(formData, "name");
   const abbreviation = text(formData, "abbreviation");
   if (!name || !abbreviation) return;
@@ -276,6 +286,7 @@ export async function createUnit(formData: FormData) {
 }
 
 export async function createLocation(formData: FormData) {
+  await requireUser();
   const name = text(formData, "name");
   if (!name) return;
   await db.location.create({ data: { name, locationType: text(formData, "locationType") || null, sortOrder: num(formData, "sortOrder", 0) } });
@@ -286,6 +297,7 @@ export async function createLocation(formData: FormData) {
 }
 
 export async function createSupplierProduct(formData: FormData) {
+  await requireUser();
   const supplierId = text(formData, "supplierId");
   const productId = text(formData, "productId");
   const purchaseUnitId = text(formData, "purchaseUnitId");
@@ -307,4 +319,79 @@ export async function createSupplierProduct(formData: FormData) {
   await db.supplierPriceHistory.create({ data: { supplierProductId: record.id, newPrice: purchasePrice, source: "Setup" } });
   revalidatePath("/setup");
   revalidatePath("/orders");
+}
+
+export async function updateManufacturer(formData: FormData) {
+  await requireUser();
+  const id = text(formData, "id");
+  const name = text(formData, "name");
+  if (!id || !name) return;
+  await db.manufacturer.update({ where: { id }, data: {
+    name,
+    contactName: text(formData, "contactName") || null,
+    phone: text(formData, "phone") || null,
+    email: text(formData, "email") || null,
+    website: text(formData, "website") || null,
+    notes: text(formData, "notes") || null,
+    active: formData.get("active") === "on",
+  }});
+  revalidatePath("/setup"); revalidatePath("/inventory");
+}
+
+export async function updateSupplier(formData: FormData) {
+  await requireUser();
+  const id = text(formData, "id");
+  const name = text(formData, "name");
+  if (!id || !name) return;
+  await db.supplier.update({ where: { id }, data: {
+    name,
+    contactName: text(formData, "contactName") || null,
+    email: text(formData, "email") || null,
+    phone: text(formData, "phone") || null,
+    website: text(formData, "website") || null,
+    accountNumber: text(formData, "accountNumber") || null,
+    orderMethod: text(formData, "orderMethod") || null,
+    orderDay: text(formData, "orderDay") || null,
+    leadTimeDays: text(formData, "leadTimeDays") ? num(formData, "leadTimeDays") : null,
+    minimumOrderAmount: text(formData, "minimumOrderAmount") ? num(formData, "minimumOrderAmount") : null,
+    deliveryNotes: text(formData, "deliveryNotes") || null,
+    active: formData.get("active") === "on",
+  }});
+  revalidatePath("/setup"); revalidatePath("/orders"); revalidatePath("/receive");
+}
+
+export async function updateLocation(formData: FormData) {
+  await requireUser();
+  const id = text(formData, "id");
+  const name = text(formData, "name");
+  if (!id || !name) return;
+  await db.location.update({ where: { id }, data: {
+    name,
+    locationType: text(formData, "locationType") || null,
+    sortOrder: num(formData, "sortOrder", 0),
+    active: formData.get("active") === "on",
+  }});
+  revalidatePath("/setup"); revalidatePath("/inventory"); revalidatePath("/stock-count"); revalidatePath("/receive");
+}
+
+export async function updateProduct(formData: FormData) {
+  await requireUser();
+  const id = text(formData, "id");
+  const name = text(formData, "name");
+  if (!id || !name) return;
+  await db.product.update({ where: { id }, data: {
+    name,
+    sku: text(formData, "sku") || null,
+    categoryId: text(formData, "categoryId"),
+    manufacturerId: text(formData, "manufacturerId") || null,
+    inventoryUnitId: text(formData, "inventoryUnitId"),
+    parLevel: num(formData, "parLevel"),
+    reorderPoint: num(formData, "reorderPoint"),
+    reorderQuantity: num(formData, "reorderQuantity"),
+    currentCost: num(formData, "currentCost"),
+    trackInventory: formData.get("trackInventory") === "on",
+    active: formData.get("active") === "on",
+    notes: text(formData, "notes") || null,
+  }});
+  revalidatePath("/setup"); revalidatePath("/inventory"); revalidatePath("/orders"); revalidatePath("/");
 }
