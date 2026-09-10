@@ -123,3 +123,10 @@ small { color:var(--muted); }
   .popup-form { min-width:0; width:100%; }
   .check-row { flex-direction:column; align-items:flex-start; }
 }
+.alert.success { background:#e2efe6; color:var(--good); border:1px solid #bfd8c8; }
+.btn.danger { background:var(--danger); color:white; }
+.danger-zone { margin:12px 14px 14px; border:1px solid #e4b9b3; border-radius:9px; background:#fff7f5; }
+.danger-zone > summary { cursor:pointer; padding:10px 12px; color:var(--danger); font-weight:800; }
+.delete-confirm { display:grid; gap:10px; padding:12px; border-top:1px solid #e4b9b3; }
+.delete-confirm p { margin:0; color:#694943; font-size:13px; line-height:1.45; }
+.delete-confirm .btn { justify-self:start; }
