@@ -2,13 +2,14 @@ import { PageHeader } from "@/components/PageHeader";
 import { db } from "@/lib/db";
 import {
   createCategory, createLocation, createManufacturer, createProduct, createSupplier, createSupplierProduct, createUnit,
-  updateLocation, updateManufacturer, updateProduct, updateSupplier,
+  updateLocation, updateManufacturer, updateProduct, updateSupplier, deleteProduct, deleteLocation,
 } from "@/lib/actions";
 import { money, qty } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-export default async function SetupPage() {
+export default async function SetupPage({ searchParams }: { searchParams: Promise<{ deleteError?: string; deleted?: string }> }) {
+  const params = await searchParams;
   const [manufacturers, suppliers, categories, units, locations, products, supplierProducts] = await Promise.all([
     db.manufacturer.findMany({ orderBy: { name: "asc" } }),
     db.supplier.findMany({ orderBy: { name: "asc" } }),
@@ -22,6 +23,8 @@ export default async function SetupPage() {
   return (
     <>
       <PageHeader title="Products & Setup" subtitle="Add new master data or edit records already entered." />
+      {params.deleteError ? <div className="alert error">{params.deleteError}</div> : null}
+      {params.deleted ? <div className="alert success">{params.deleted}</div> : null}
 
       <section className="card">
         <div className="section-title"><h2>Products</h2><span className="badge">{products.length}</span></div>
@@ -31,8 +34,10 @@ export default async function SetupPage() {
             <div className="full"><button className="btn" type="submit">Add product</button></div>
           </form>
         </details>
-        <div className="table-wrap"><table><thead><tr><th>Product</th><th>Manufacturer</th><th>Category</th><th>Unit</th><th>Cost</th><th>Par</th><th>Status</th><th></th></tr></thead>
-          <tbody>{products.map(p => <tr key={p.id}><td><strong>{p.name}</strong><br/><small>{p.sku ?? "No SKU"}</small></td><td>{p.manufacturer?.name ?? "—"}</td><td>{p.category.name}</td><td>{p.inventoryUnit.abbreviation}</td><td>{money(p.currentCost)}</td><td>{qty(p.parLevel)}</td><td><span className={`badge ${p.active ? "ok" : "low"}`}>{p.active ? "Active" : "Inactive"}</span></td><td><details className="inline-editor"><summary>Edit</summary><form action={updateProduct} className="form-grid popup-form"><input type="hidden" name="id" value={p.id}/><ProductFields categories={categories} manufacturers={manufacturers} units={units} product={p}/><div className="full check-row"><label><input type="checkbox" name="trackInventory" defaultChecked={p.trackInventory}/> Track inventory</label><label><input type="checkbox" name="active" defaultChecked={p.active}/> Active</label></div><label className="full">Notes<textarea name="notes" defaultValue={p.notes ?? ""}/></label><div className="full"><button className="btn" type="submit">Save changes</button></div></form></details></td></tr>)}</tbody>
+        <div className="table-wrap"><table><thead><tr><th>Product</th><th>Manufacturer</th><th>Category</th><th>Unit</th><th>Cost</th><th>Target stock</th><th>Status</th><th></th></tr></thead>
+          <tbody>{products.map(p => <tr key={p.id}><td><strong>{p.name}</strong><br/><small>{p.sku ?? "No SKU"}</small></td><td>{p.manufacturer?.name ?? "—"}</td><td>{p.category.name}</td><td>{p.inventoryUnit.abbreviation}</td><td>{money(p.currentCost)}</td><td>{qty(p.parLevel)}</td><td><span className={`badge ${p.active ? "ok" : "low"}`}>{p.active ? "Active" : "Inactive"}</span></td><td><details className="inline-editor"><summary>Edit</summary><form action={updateProduct} className="form-grid popup-form"><input type="hidden" name="id" value={p.id}/><ProductFields categories={categories} manufacturers={manufacturers} units={units} product={p}/><div className="full check-row"><label><input type="checkbox" name="trackInventory" defaultChecked={p.trackInventory}/> Track inventory</label><label><input type="checkbox" name="active" defaultChecked={p.active}/> Active</label></div><label className="full">Notes<textarea name="notes" defaultValue={p.notes ?? ""}/></label><div className="full"><button className="btn" type="submit">Save changes</button></div></form>
+              <details className="danger-zone"><summary>Delete product…</summary><form action={deleteProduct} className="delete-confirm"><input type="hidden" name="id" value={p.id}/><p><strong>Permanent deletion.</strong> If this product has inventory, count, order, or receiving history, deletion will be blocked. Otherwise, type <strong>DELETE</strong> to confirm.</p><label>Type DELETE<input name="confirmation" autoComplete="off" required /></label><button className="btn danger" type="submit">Permanently delete product</button></form></details>
+            </details></td></tr>)}</tbody>
         </table></div>
       </section>
 
@@ -44,7 +49,7 @@ export default async function SetupPage() {
 
         <section className="card"><div className="section-title"><h2>Locations</h2><span className="badge">{locations.length}</span></div>
           <details className="editor"><summary>+ Add location</summary><form action={createLocation} className="form-grid editor-body"><label>Name<input name="name" required /></label><label>Type<input name="locationType" /></label><label>Sort order<input type="number" name="sortOrder" defaultValue="0"/></label><div className="full"><button className="btn">Add location</button></div></form></details>
-          <div className="record-list">{locations.map(l => <details className="record" key={l.id}><summary><span>{l.name}</span><span className={`badge ${l.active ? "ok" : "low"}`}>{l.active ? "Active" : "Inactive"}</span></summary><form action={updateLocation} className="form-grid editor-body"><input type="hidden" name="id" value={l.id}/><label>Name<input name="name" required defaultValue={l.name}/></label><label>Type<input name="locationType" defaultValue={l.locationType ?? ""}/></label><label>Sort order<input type="number" name="sortOrder" defaultValue={l.sortOrder}/></label><label className="check-label"><input type="checkbox" name="active" defaultChecked={l.active}/> Active</label><div className="full"><button className="btn">Save location</button></div></form></details>)}</div>
+          <div className="record-list">{locations.map(l => <details className="record" key={l.id}><summary><span>{l.name}</span><span className={`badge ${l.active ? "ok" : "low"}`}>{l.active ? "Active" : "Inactive"}</span></summary><form action={updateLocation} className="form-grid editor-body"><input type="hidden" name="id" value={l.id}/><label>Name<input name="name" required defaultValue={l.name}/></label><label>Type<input name="locationType" defaultValue={l.locationType ?? ""}/></label><label>Sort order<input type="number" name="sortOrder" defaultValue={l.sortOrder}/></label><label className="check-label"><input type="checkbox" name="active" defaultChecked={l.active}/> Active</label><div className="full"><button className="btn">Save location</button></div></form><details className="danger-zone"><summary>Delete location…</summary><form action={deleteLocation} className="delete-confirm"><input type="hidden" name="id" value={l.id}/><p><strong>Permanent deletion.</strong> If this location has inventory, stock count, or receiving history, deletion will be blocked. Otherwise, type <strong>DELETE</strong> to confirm.</p><label>Type DELETE<input name="confirmation" autoComplete="off" required /></label><button className="btn danger" type="submit">Permanently delete location</button></form></details></details>)}</div>
         </section>
       </div>
 
@@ -74,7 +79,7 @@ function ProductFields({ categories, manufacturers, units, product }: any) {
     <label>Manufacturer<select name="manufacturerId" defaultValue={product?.manufacturerId ?? ""}><option value="">None</option>{manufacturers.map((m:any)=><option key={m.id} value={m.id}>{m.name}</option>)}</select></label>
     <label>Inventory unit<select name="inventoryUnitId" required defaultValue={product?.inventoryUnitId ?? ""}><option value="" disabled>Select unit</option>{units.map((u:any)=><option key={u.id} value={u.id}>{u.name} ({u.abbreviation})</option>)}</select></label>
     <label>Current cost<input type="number" step="0.0001" min="0" name="currentCost" defaultValue={product ? String(product.currentCost) : "0"}/></label>
-    <label>Par level<input type="number" step="0.001" min="0" name="parLevel" defaultValue={product ? String(product.parLevel) : "0"}/></label>
+    <label>Target stock<input type="number" step="0.001" min="0" name="parLevel" defaultValue={product ? String(product.parLevel) : "0"}/></label>
     <label>Reorder point<input type="number" step="0.001" min="0" name="reorderPoint" defaultValue={product ? String(product.reorderPoint) : "0"}/></label>
     <label>Default reorder quantity<input type="number" step="0.001" min="0" name="reorderQuantity" defaultValue={product ? String(product.reorderQuantity) : "0"}/></label>
   </>;
