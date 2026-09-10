@@ -130,3 +130,39 @@ small { color:var(--muted); }
 .delete-confirm { display:grid; gap:10px; padding:12px; border-top:1px solid #e4b9b3; }
 .delete-confirm p { margin:0; color:#694943; font-size:13px; line-height:1.45; }
 .delete-confirm .btn { justify-self:start; }
+
+
+/* Order history timeline */
+.history-filters { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)) auto; gap:12px; align-items:end; }
+.history-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+.timeline { display:grid; gap:10px; }
+.timeline-item { border:1px solid var(--line); border-radius:11px; background:var(--panel); overflow:hidden; }
+.timeline-item > summary { list-style:none; cursor:pointer; display:grid; grid-template-columns:110px minmax(170px,1.4fr) minmax(120px,1fr) 120px 110px; gap:12px; align-items:center; padding:13px 15px; }
+.timeline-item > summary::-webkit-details-marker { display:none; }
+.timeline-item > summary:hover { background:#faf6ef; }
+.timeline-date { color:var(--muted); font-size:13px; }
+.timeline-kind { display:inline-flex; align-items:center; width:max-content; padding:4px 8px; border-radius:999px; background:var(--accent-soft); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+.timeline-kind.received { background:#e2efe6; color:var(--good); }
+.timeline-amount { text-align:right; font-weight:800; }
+.timeline-detail { border-top:1px solid var(--line); padding:15px; background:#fffdf9; }
+.timeline-detail-grid { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(280px,.8fr); gap:18px; align-items:start; }
+.history-edit { border:1px dashed var(--line); border-radius:10px; padding:13px; background:#fbf7ef; }
+.history-edit h3 { margin:0 0 10px; }
+.supplier-totals td:not(:first-child), .supplier-totals th:not(:first-child) { text-align:right; }
+@media (max-width:1000px) {
+  .history-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .history-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .timeline-item > summary { grid-template-columns:100px minmax(160px,1.3fr) minmax(110px,1fr) 100px; }
+  .timeline-item > summary .timeline-status { display:none; }
+  .timeline-detail-grid { grid-template-columns:1fr; }
+}
+@media (max-width:760px) {
+  .history-filters { grid-template-columns:1fr; }
+  .history-summary { grid-template-columns:1fr 1fr; }
+  .timeline-item > summary { grid-template-columns:1fr auto; gap:6px 10px; }
+  .timeline-item > summary .timeline-date { grid-column:1; }
+  .timeline-item > summary .timeline-kind { grid-column:2; grid-row:1; }
+  .timeline-item > summary .timeline-supplier { grid-column:1; }
+  .timeline-item > summary .timeline-reference { grid-column:1; color:var(--muted); font-size:12px; }
+  .timeline-item > summary .timeline-amount { grid-column:2; grid-row:2 / span 2; align-self:center; }
+}
