@@ -34,7 +34,7 @@ export default async function DashboardPage() {
           {low.length ? low.slice(0, 8).map((p) => (
             <div className="low-row" key={p.id}>
               <div><strong>{p.name}</strong><span>{p.manufacturer?.name ?? "No manufacturer"} · {p.category.name}</span></div>
-              <div style={{textAlign:"right"}}><strong>{qty(p.onHand)} {p.inventoryUnit.abbreviation}</strong><span>Par {qty(p.parLevel)}</span></div>
+              <div style={{textAlign:"right"}}><strong>{qty(p.onHand)} {p.inventoryUnit.abbreviation}</strong><span>Target stock {qty(p.parLevel)}</span></div>
             </div>
           )) : <div className="empty">No products are below their reorder point.</div>}
         </section>
