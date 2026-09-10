@@ -37,7 +37,7 @@ export default async function OrdersPage({ searchParams }: Props) {
         <form action={createPurchaseOrder}>
           <input type="hidden" name="supplierId" value={supplierId} />
           <div className="form-grid" style={{marginBottom:14}}><label>Expected delivery date<input type="date" name="expectedDeliveryDate" /></label></div>
-          <div className="table-wrap"><table><thead><tr><th>Product</th><th>On hand</th><th>On order</th><th>Par</th><th>Pack</th><th>Price</th><th>Suggested</th><th>Order qty</th></tr></thead><tbody>
+          <div className="table-wrap"><table><thead><tr><th>Product</th><th>On hand</th><th>On order</th><th>Target stock</th><th>Pack</th><th>Price</th><th>Suggested</th><th>Order qty</th></tr></thead><tbody>
             {supplierProducts.map(sp => {
               const p = invMap.get(sp.productId);
               const onHand = p?.onHand ?? 0;
