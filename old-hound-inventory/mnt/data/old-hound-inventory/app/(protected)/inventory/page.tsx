@@ -18,7 +18,7 @@ export default async function InventoryPage() {
       <section className="card">
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Product</th><th>Manufacturer</th><th>Category</th><th>On hand</th><th>Par</th><th>Reorder</th><th>Value</th><th>Status</th></tr></thead>
+            <thead><tr><th>Product</th><th>Manufacturer</th><th>Category</th><th>On hand</th><th>Target stock</th><th>Reorder</th><th>Value</th><th>Status</th></tr></thead>
             <tbody>
               {inventory.map((p) => {
                 const low = p.onHand <= Number(p.reorderPoint);
