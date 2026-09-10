@@ -8,6 +8,7 @@ const links = [
   ["/stock-count", "Stock Count"],
   ["/orders", "Orders"],
   ["/receive", "Receive"],
+  ["/history", "Order History"],
   ["/setup", "Products & Setup"],
 ] as const;
 
