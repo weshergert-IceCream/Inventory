@@ -268,6 +268,55 @@ export async function receivePurchaseOrder(formData: FormData) {
   revalidatePath("/");
 }
 
+
+export async function updatePurchaseOrderHistory(formData: FormData) {
+  await requireUser();
+  const id = text(formData, "id");
+  if (!id) return;
+
+  const orderDate = text(formData, "orderDate");
+  const expectedDeliveryDate = text(formData, "expectedDeliveryDate");
+
+  await db.purchaseOrder.update({
+    where: { id },
+    data: {
+      orderDate: orderDate ? new Date(`${orderDate}T12:00:00`) : undefined,
+      expectedDeliveryDate: expectedDeliveryDate ? new Date(`${expectedDeliveryDate}T12:00:00`) : null,
+      supplierConfirmation: text(formData, "supplierConfirmation") || null,
+      notes: text(formData, "notes") || null,
+    },
+  });
+
+  revalidatePath("/history");
+  revalidatePath("/orders");
+  revalidatePath("/receive");
+  revalidatePath("/");
+}
+
+export async function updateDeliveryHistory(formData: FormData) {
+  await requireUser();
+  const id = text(formData, "id");
+  if (!id) return;
+
+  const deliveryDate = text(formData, "deliveryDate");
+  const invoiceTotal = text(formData, "invoiceTotal");
+
+  await db.delivery.update({
+    where: { id },
+    data: {
+      deliveryDate: deliveryDate ? new Date(`${deliveryDate}T12:00:00`) : undefined,
+      invoiceNumber: text(formData, "invoiceNumber") || null,
+      invoiceTotal: invoiceTotal ? num(formData, "invoiceTotal") : null,
+      notes: text(formData, "notes") || null,
+    },
+  });
+
+  revalidatePath("/history");
+  revalidatePath("/receive");
+  revalidatePath("/orders");
+  revalidatePath("/");
+}
+
 export async function createCategory(formData: FormData) {
   await requireUser();
   const name = text(formData, "name");
