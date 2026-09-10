@@ -395,3 +395,67 @@ export async function updateProduct(formData: FormData) {
   }});
   revalidatePath("/setup"); revalidatePath("/inventory"); revalidatePath("/orders"); revalidatePath("/");
 }
+
+
+export async function deleteProduct(formData: FormData) {
+  await requireUser();
+  const id = text(formData, "id");
+  const confirmation = text(formData, "confirmation");
+  if (!id || confirmation !== "DELETE") {
+    redirect("/setup?deleteError=" + encodeURIComponent("Deletion cancelled: type DELETE exactly to confirm."));
+  }
+
+  const product = await db.product.findUnique({ where: { id }, select: { name: true } });
+  if (!product) redirect("/setup?deleteError=" + encodeURIComponent("Product was not found."));
+
+  const [transactions, stockCounts, orderItems, deliveryItems] = await Promise.all([
+    db.inventoryTransaction.count({ where: { productId: id } }),
+    db.stockCountItem.count({ where: { productId: id } }),
+    db.purchaseOrderItem.count({ where: { productId: id } }),
+    db.deliveryItem.count({ where: { productId: id } }),
+  ]);
+
+  if (transactions || stockCounts || orderItems || deliveryItems) {
+    redirect("/setup?deleteError=" + encodeURIComponent(
+      `Cannot permanently delete ${product!.name} because it is already used in inventory, stock count, order, or receiving history. Mark it Inactive instead.`
+    ));
+  }
+
+  await db.product.delete({ where: { id } });
+  revalidatePath("/setup");
+  revalidatePath("/inventory");
+  revalidatePath("/orders");
+  revalidatePath("/");
+  redirect("/setup?deleted=" + encodeURIComponent(`Product ${product!.name} was permanently deleted.`));
+}
+
+export async function deleteLocation(formData: FormData) {
+  await requireUser();
+  const id = text(formData, "id");
+  const confirmation = text(formData, "confirmation");
+  if (!id || confirmation !== "DELETE") {
+    redirect("/setup?deleteError=" + encodeURIComponent("Deletion cancelled: type DELETE exactly to confirm."));
+  }
+
+  const location = await db.location.findUnique({ where: { id }, select: { name: true } });
+  if (!location) redirect("/setup?deleteError=" + encodeURIComponent("Location was not found."));
+
+  const [transactions, stockCounts, deliveryItems] = await Promise.all([
+    db.inventoryTransaction.count({ where: { locationId: id } }),
+    db.stockCount.count({ where: { locationId: id } }),
+    db.deliveryItem.count({ where: { locationId: id } }),
+  ]);
+
+  if (transactions || stockCounts || deliveryItems) {
+    redirect("/setup?deleteError=" + encodeURIComponent(
+      `Cannot permanently delete ${location!.name} because it is already used in inventory, stock count, or receiving history. Mark it Inactive instead.`
+    ));
+  }
+
+  await db.location.delete({ where: { id } });
+  revalidatePath("/setup");
+  revalidatePath("/inventory");
+  revalidatePath("/stock-count");
+  revalidatePath("/receive");
+  redirect("/setup?deleted=" + encodeURIComponent(`Location ${location!.name} was permanently deleted.`));
+}
